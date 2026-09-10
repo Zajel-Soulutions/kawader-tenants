@@ -1,10 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "tenants": {
     "OTAISHAN": {
       "name": "Al Otaishan",
-      "base_url": "https://erp-otaishan-staging3-36136457.dev.odoo.com",
-      "api_prefix": "/api"
+      "base_url": "https://erp-otaishan-staging4-37729324.dev.odoo.com",
+      "api_prefix": "/api/v1"
     }
   }
 }
