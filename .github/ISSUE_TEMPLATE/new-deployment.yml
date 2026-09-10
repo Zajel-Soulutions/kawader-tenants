@@ -1,0 +1,84 @@
+name: Add a new customer
+description: A deployment is live and ready for its employees to sign in.
+title: 'Add customer: '
+labels: ['new-customer']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this once the customer's Odoo is **already live** on a public hostname.
+
+        Until the directory entry exists, nobody at that customer can reach the server at all —
+        the app has no other way to learn an address. Adding an entry is safe and additive: it
+        cannot affect any customer already using the app.
+
+  - type: input
+    id: org
+    attributes:
+      label: Organisation name
+      description: As the employee should recognise it. This is shown on the confirmation step before sign-in — use the trading name, not the legal entity.
+      placeholder: Al Otaishan
+    validations:
+      required: true
+
+  - type: input
+    id: base_url
+    attributes:
+      label: Base URL
+      description: Origin only — scheme and host, no path, no trailing slash. Must be https.
+      placeholder: https://hr.example.com
+    validations:
+      required: true
+
+  - type: dropdown
+    id: api_prefix
+    attributes:
+      label: API prefix
+      description: Where the API is mounted on that host.
+      options:
+        - /api/v1
+        - /api
+        - (root — no prefix)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: preconditions
+    attributes:
+      label: Before this can be added
+      description: All four must be true. The first two are hard requirements — the app rejects anything else outright.
+      options:
+        - label: The hostname is public (not a LAN address) and reachable from the internet
+          required: true
+        - label: TLS is valid — a real certificate, not self-signed
+          required: true
+        - label: '`POST /auth/login` on that host answers (400 to an empty body is the expected result)'
+          required: true
+        - label: '`GET /employees/me` answers 401 without a token, rather than 404'
+          required: true
+
+  - type: input
+    id: meta
+    attributes:
+      label: What does GET /meta return?
+      description: 404 is fine — the app falls back to its compiled-in defaults. We just need to know which it is.
+      placeholder: 404 / 200
+    validations:
+      required: true
+
+  - type: input
+    id: code
+    attributes:
+      label: Suggested company code (optional)
+      description: We assign the final code — see the convention in the README. Suggest one if the customer has a preference.
+      placeholder: ACME
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Go-live date, expected headcount, or anything unusual about this deployment.
+    validations:
+      required: false

@@ -1,0 +1,88 @@
+name: Move an existing customer
+description: Change the hostname or API prefix of a customer already in the directory.
+title: 'Move customer: '
+labels: ['migration']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Read this before filling it in
+
+        Changing an entry **migrates every installed device on that code**. The app re-reads this
+        file in the background and follows the move silently, so nobody re-enters anything — which
+        also means a mistake here reaches every employee at that customer, and there is no way to
+        recall it.
+
+        The move is **not atomic**. The directory is cached on each device for 24 hours, so devices
+        cross over gradually as each one is next opened. For up to a day, some are calling the old
+        address and some the new one.
+
+        **So the old address must keep working until the migration has settled.** Do not switch one
+        for the other in a single move.
+
+  - type: input
+    id: code
+    attributes:
+      label: Company code
+      description: The existing key in v1.json.
+      placeholder: OTAISHAN
+    validations:
+      required: true
+
+  - type: input
+    id: from
+    attributes:
+      label: Moving from
+      description: The current base_url and prefix, exactly as they appear in the file today.
+      placeholder: https://old.example.com + /api
+    validations:
+      required: true
+
+  - type: input
+    id: to
+    attributes:
+      label: Moving to
+      description: Origin only, https, no trailing slash — plus the new prefix.
+      placeholder: https://new.example.com + /api/v1
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dual
+    attributes:
+      label: Both addresses are serving right now
+      description: This is the requirement that keeps devices working during the crossover.
+      options:
+        - label: The **new** address is live and answers correctly
+          required: true
+        - label: The **old** address is still live and will stay up for at least 7 days after the entry changes
+          required: true
+        - label: Both serve the same controllers against the same database
+          required: true
+
+  - type: dropdown
+    id: reason
+    attributes:
+      label: Why
+      options:
+        - Moving to /api/v1
+        - New hostname (infrastructure move)
+        - Staging to production
+        - Other (explain below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything we should know about timing — a maintenance window, a deadline for retiring the old address.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **What happens next:** we change the entry and commit. Devices follow over the next 24
+        hours. Retire the old address about a week later, once the crossover has settled — not
+        before.

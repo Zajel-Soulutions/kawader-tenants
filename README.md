@@ -39,6 +39,34 @@ never touches the app repo or requires an app release.
   deployment can sit on `/api/v1` while another is still on `/api`, with the same app build talking
   correctly to both. This is how a customer is migrated to a new API version without an app release.
 
+## Choosing a company code
+
+The code is assigned by us, not by the customer, because it has to stay unique across every
+customer forever. `OTAISHAN` was derived by the rule below and is the worked example.
+
+1. **Start from the name the employee would recognise**, not the legal entity — "Al Otaishan", not
+   "Al Otaishan Trading & Contracting Co. Ltd".
+2. **Drop leading articles.** `Al`, `Al-`, `The` all go. → `Otaishan`
+3. **Transliterate to ASCII** if the name is Arabic, using the spelling the customer uses in their
+   own English-language material.
+4. **Strip spaces and punctuation, then uppercase.** → `OTAISHAN`
+5. **Aim for 12 characters or fewer.** An employee types this by hand, often off a printed sheet.
+   If the name is long, use the part people actually say — a well-known abbreviation beats a
+   truncation nobody recognises.
+6. **Check it is not already taken** in `v1.json`, and that it is not confusable with an existing
+   code.
+
+The hard constraints, enforced by `scripts/validate.mjs` and by the app itself: `A–Z`, `0–9`,
+underscore and hyphen only, 2–32 characters. That character set is not cosmetic — the code becomes
+a key suffix in the device's secure storage, which is what keeps one customer's token from ever
+being sent to another customer's server.
+
+Two practical notes. Codes read as words rather than random strings, so `O`/`0` confusion is rarely
+a problem — but **do not mix digits into a word** (`ACME1` invites exactly that mistake); use a
+suffix that reads as a word instead, like `ACME_KSA`. And **a code is permanent in practice**:
+changing it signs out every employee at that customer and makes them re-enter the new one, because
+their stored credentials are keyed to the old code.
+
 ## Adding a customer
 
 1. Add the entry here and commit.
@@ -46,6 +74,37 @@ never touches the app repo or requires an app release.
 3. HR gives their staff the code.
 
 That is the whole process. No build, no store submission, no app update.
+
+## Requesting a change
+
+The backend team does not edit this file. They open an issue and we make the change:
+
+- **[Add a new customer](../../issues/new?template=new-deployment.yml)** — for a deployment that is
+  already live. Additive and safe.
+- **[Move an existing customer](../../issues/new?template=change-host.yml)** — for a hostname or
+  prefix change. This migrates live devices, so the template asks for the dual-running guarantee
+  first.
+
+Both templates ask for the preconditions up front, because an entry pointing at a host that is not
+ready looks, to the employee, exactly like the app being broken.
+
+## Validation
+
+`scripts/validate.mjs` runs on every pull request and every push to `main`
+(`.github/workflows/validate.yml`). It enforces the same rules the app enforces at runtime — HTTPS
+only, origin-only `base_url`, the code character set — plus one the app cannot check: that
+[`CNAME`](./CNAME) still exists and still reads `tenants.kawader.app`. Deleting that file would drop
+the custom domain, and every installed app is compiled to fetch the directory from that domain.
+
+Run it locally before committing:
+
+```bash
+node scripts/validate.mjs
+```
+
+The workflow also pings each tenant's host and reports what it gets. That check never fails the
+build — a deployment can legitimately be down for maintenance — it is there to catch a typo'd
+hostname on the day it is added.
 
 ## Editing hazards
 
