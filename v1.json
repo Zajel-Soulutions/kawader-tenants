@@ -4,7 +4,15 @@
     "OTAISHAN": {
       "name": "Al Otaishan",
       "base_url": "https://erp-otaishan-staging4-37729324.dev.odoo.com",
-      "api_prefix": "/api/v1"
+      "api_prefix": "/api/v1",
+      "features": {
+        "geofence_required": true,
+        "attendance_photo_required": true,
+        "face_recognition_enabled": true,
+        "corrections_enabled": true,
+        "payslips_enabled": true,
+        "requests_enabled": true
+      }
     }
   }
 }
