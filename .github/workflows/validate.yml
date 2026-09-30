@@ -1,0 +1,36 @@
+name: Validate directory
+
+# Runs the same checks the README promises: v1.json and CNAME on every pull
+# request and every push to main, then a host ping that reports but never fails.
+#
+# Note: GitHub Pages publishes from main on its own, not through this workflow,
+# so a red run does not stop a bad directory going live. What stops it is
+# making the "validate" check required on main in the branch protection
+# settings, so a failing pull request cannot be merged.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate v1.json and CNAME
+        run: node scripts/validate.mjs
+
+      - name: Ping each tenant's host (informational)
+        run: node scripts/ping.mjs
+        continue-on-error: true

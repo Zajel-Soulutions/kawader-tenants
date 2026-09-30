@@ -112,15 +112,23 @@ only, origin-only `base_url`, the code character set — plus one the app cannot
 [`CNAME`](./CNAME) still exists and still reads `tenants.kawader.app`. Deleting that file would drop
 the custom domain, and every installed app is compiled to fetch the directory from that domain.
 
-Run it locally before committing:
+Run both locally before committing:
 
 ```bash
-node scripts/validate.mjs
+node scripts/validate.mjs   # fails on a broken entry
+node scripts/ping.mjs       # reports only
 ```
 
-The workflow also pings each tenant's host and reports what it gets. That check never fails the
+`scripts/ping.mjs` requests each tenant's `{base_url}{api_prefix}/meta` — the probe the app makes
+before binding a code — and reports what it gets. A `404` is the healthy answer: the backend does not
+build `/meta` (decision D9), and a 404 proves a server answered. No answer, a 401/403 or a 5xx is
+what the app refuses to bind on, so those show as warnings on the run. The ping never fails the
 build — a deployment can legitimately be down for maintenance — it is there to catch a typo'd
 hostname on the day it is added.
+
+**A red run does not stop publishing on its own.** GitHub Pages builds from `main` independently of
+this workflow. What keeps a broken directory off `main` is making the `validate` check required in
+the branch protection settings, so a failing pull request cannot be merged.
 
 ## Editing hazards
 
