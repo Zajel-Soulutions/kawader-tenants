@@ -14,6 +14,17 @@ import { readFileSync, existsSync } from 'node:fs';
 const CODE_PATTERN = /^[A-Z0-9_-]{2,32}$/;
 const EXPECTED_DOMAIN = 'tenants.kawader.app';
 
+// The per-deployment switches the app reads from an entry's `features` object.
+// Keep in step with WIRE_NAMES in the app's `src/lib/featureFlags.ts`.
+const FEATURE_FLAGS = new Set([
+  'geofence_required',
+  'attendance_photo_required',
+  'face_recognition_enabled',
+  'corrections_enabled',
+  'payslips_enabled',
+  'requests_enabled',
+]);
+
 const problems = [];
 const warnings = [];
 
@@ -68,9 +79,28 @@ for (const [code, entry] of Object.entries(doc.tenants)) {
     continue;
   }
 
-  const allowed = new Set(['name', 'base_url', 'api_prefix']);
+  const allowed = new Set(['name', 'base_url', 'api_prefix', 'features']);
   for (const key of Object.keys(entry)) {
     if (!allowed.has(key)) warn(at, `unknown field "${key}" — the app ignores it`);
+  }
+
+  // ── features ───────────────────────────────────────────────────────────────
+  // Optional. The app reads exactly these keys (`src/lib/featureFlags.ts`) and
+  // silently ignores anything else, so a misspelt flag would leave the compiled
+  // default in force with nothing to say so. That makes an unknown key an error
+  // here, not a warning. An absent key is fine: the app keeps its default.
+  if (entry.features !== undefined) {
+    if (!entry.features || typeof entry.features !== 'object' || Array.isArray(entry.features)) {
+      fail(at, '"features" must be an object of flags');
+    } else {
+      for (const [flag, value] of Object.entries(entry.features)) {
+        if (!FEATURE_FLAGS.has(flag)) {
+          fail(`${at}.features`, `unknown flag "${flag}" — the app would ignore it; known: ${[...FEATURE_FLAGS].join(', ')}`);
+        } else if (typeof value !== 'boolean') {
+          fail(`${at}.features`, `"${flag}" must be true or false, not ${JSON.stringify(value)}`);
+        }
+      }
+    }
   }
 
   if (typeof entry.name !== 'string' || !entry.name.trim()) {

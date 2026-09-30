@@ -15,12 +15,20 @@ never touches the app repo or requires an app release.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "tenants": {
     "OTAISHAN": {
       "name": "Al Otaishan",
-      "base_url": "https://erp-otaishan-staging3-36136457.dev.odoo.com",
-      "api_prefix": "/api"
+      "base_url": "https://erp-otaishan-staging4-37729324.dev.odoo.com",
+      "api_prefix": "/api/v1",
+      "features": {
+        "geofence_required": true,
+        "attendance_photo_required": true,
+        "face_recognition_enabled": true,
+        "corrections_enabled": true,
+        "payslips_enabled": true,
+        "requests_enabled": true
+      }
     }
   }
 }
@@ -38,6 +46,14 @@ never touches the app repo or requires an app release.
 - **`api_prefix`** — `''` or a leading-slash path with no trailing slash. Per customer, so one
   deployment can sit on `/api/v1` while another is still on `/api`, with the same app build talking
   correctly to both. This is how a customer is migrated to a new API version without an app release.
+- **`features`** — optional; the per-deployment switches. Each key is `true` or `false`, and an
+  absent key leaves the app on the default compiled into the build — so state every flag
+  explicitly, or the deployment's behaviour depends on how the build that reached a device was
+  made. `corrections_enabled`, `payslips_enabled` and `requests_enabled` gate screens that sit on
+  separate Odoo modules; set one `false` for a deployment that does not run that module, and the
+  app hides the entry point instead of offering a screen that fails. The six keys are the only
+  ones the app reads, and the validator rejects any other. A change reaches a device on its first
+  launch after its 24-hour cache expires.
 
 ## Choosing a company code
 
