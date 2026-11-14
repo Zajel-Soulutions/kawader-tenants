@@ -3,7 +3,7 @@
   "tenants": {
     "OTAISHAN": {
       "name": "Al Otaishan",
-      "base_url": "https://erp-otaishan-staging4-39657779.dev.odoo.com",
+      "base_url": "https://erp-otaishan-staging4-41773807.dev.odoo.com",
       "api_prefix": "/api/v1",
       "features": {
         "geofence_required": true,
